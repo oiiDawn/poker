@@ -153,26 +153,38 @@ All types defined in `src/types.ts`:
 
 ### TUI System
 
-**Screen Layout** (fixed ~22 lines):
+**Primitives** (`src/ui/tui.ts`): `clearScreen`, `arrowMenu`, `readLine`, `colors`.
+
+**Rendering** (`src/ui/renderer.ts`): `printTable(stage, pot, community, players, events, showWinProb?, initialChips?, showdownResults?)` — optional `showdownResults` displays a “Showdown Results” or “Round Result” block; player hand can show optional Win% bar when `showWinProb` is true.
+
+**Screen Layout** (80‑char width, box-drawing; line count varies with player count and result block):
 ```
- 【Pre-flop】   Pot: 340
- Community:  A♠   K♥   7♦    ??   ??
-──────────────────────────────────────
- Player    Chips   [Status]   Hole Cards
- ...
-──────────────────────────────────────
- Recent Actions:
- ↳ Event 1
- ...
-──────────────────────────────────────
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ 【Pre-flop】   Pot: 340                                                      ║
+║ Community:  A♠   K♥   7♦    ??   ??                                         ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║ Player       Chips   [Status]   Hand: ...  [optional Win% bar]               ║
+║ ...                                                                          ║
+║ ├──────────────────────────────────────────────────────────────────────────┤
+║ 🏆 Showdown Results:   (or ══ Round Result ══ when someone wins by fold)   ║
+║   ... result lines ...                                                       ║
+║ ├──────────────────────────────────────────────────────────────────────────┤
+║ Recent Actions:                                                              ║
+║   ↳ Event 1                                                                 ║
+║   ...                                                                        ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
  Action Menu (arrow keys + Enter)
 ```
 
+- **Showdown**: After river betting, `doShowdown()` clears screen and calls `printTable(..., outputLines)` with showdown hand names and pot winners.
+- **Fold-out**: When all but one fold, `resolveFoldOut()` clears screen and calls `printTable(..., outputLines)` with “Round Result” and “wins by fold” so the final state is always visible before “Continue next round?”.
+
 **Interaction Pattern**:
-1. `clearScreen()` - Clear terminal
-2. `printTable()` - Render game state
-3. `arrowMenu()` - Show options, capture input
-4. `readLine()` - For numeric input (raise amounts)
+1. `clearScreen()` — Clear terminal
+2. `printTable(...)` — Render game state (and optional result block)
+3. `arrowMenu()` — Show options, capture input
+4. `readLine()` — For numeric input (e.g. raise amounts)
 
 ## Code Guidelines
 

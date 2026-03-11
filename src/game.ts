@@ -75,9 +75,35 @@ export class PokerGame {
       .length;
   }
 
-  private resolveFoldOut(winner: Player): void {
-    awardPotToWinner(winner, this.getPot());
-    this.addEvent(`${winner.name} wins pot ${this.getPot()}`);
+  private stageFromCommunity(community: Card[]): GameStage {
+    if (community.length >= 5) return "river";
+    if (community.length === 4) return "turn";
+    if (community.length === 3) return "flop";
+    return "preflop";
+  }
+
+  private resolveFoldOut(winner: Player, community: Card[]): void {
+    const pot = this.getPot();
+    awardPotToWinner(winner, pot);
+    this.addEvent(`${winner.name} wins pot ${pot}`);
+
+    const nameColor = winner.id === "player" ? colors.green : colors.cyan;
+    const outputLines = [
+      `${colors.bright}══ Round Result ══${colors.reset}`,
+      `🏆 ${nameColor}${winner.name}${colors.reset} wins by fold (${colors.yellow}${pot}${colors.reset})`,
+    ];
+
+    clearScreen();
+    printTable(
+      this.stageFromCommunity(community),
+      this.getPot(),
+      community,
+      this.players,
+      this.eventLog,
+      this.showWinProb,
+      this.config.initialChips,
+      outputLines,
+    );
   }
 
   private doShowdown(community: Card[]): void {
@@ -168,7 +194,7 @@ export class PokerGame {
 
     let active = this.getActivePlayers();
     if (active.length === 1) {
-      this.resolveFoldOut(active[0]);
+      this.resolveFoldOut(active[0], community);
       return community;
     }
 
@@ -190,7 +216,7 @@ export class PokerGame {
 
       active = this.getActivePlayers();
       if (active.length === 1) {
-        this.resolveFoldOut(active[0]);
+        this.resolveFoldOut(active[0], community);
         return community;
       }
 
@@ -210,7 +236,7 @@ export class PokerGame {
 
       active = this.getActivePlayers();
       if (active.length === 1) {
-        this.resolveFoldOut(active[0]);
+        this.resolveFoldOut(active[0], community);
         return community;
       }
     }
