@@ -326,6 +326,14 @@ export async function runBettingRound(
     );
     if (canAct.length === 0) break;
 
+    // If only one player can act and they've matched the bet, end betting
+    if (canAct.length === 1) {
+      const player = canAct[0];
+      if (player.bet >= state.currentBet) {
+        break;
+      }
+    }
+
     const allMatched = canAct.every((p) => p.bet === state.currentBet);
     const allActed = canAct.every((p) => state.acted.has(p.id));
     if (allMatched && allActed) break;
