@@ -43,7 +43,7 @@ export type AIPersonality =
   | "calling_station";
 export type GameStage = "preflop" | "flop" | "turn" | "river";
 export type Action = "fold" | "check" | "call" | "raise" | "allin";
-export type LLMProvider = "anthropic" | "openai" | "local";
+export type LLMProvider = "anthropic" | "openai";
 
 export interface HandEvaluation {
   rank: number;

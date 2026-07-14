@@ -44,10 +44,10 @@ export function renderWelcomeBanner(): void {
 
 async function selectLLMConfig(): Promise<LLMConfig | undefined> {
   const providerIdx = await arrowMenu(
-    ["Anthropic Claude", "OpenAI GPT", "Local model"],
+    ["Anthropic Claude", "OpenAI GPT"],
     "Select LLM provider:",
   );
-  const providers: LLMProvider[] = ["anthropic", "openai", "local"];
+  const providers: LLMProvider[] = ["anthropic", "openai"];
   const provider = providers[providerIdx];
 
   if (provider === "anthropic") {
@@ -57,21 +57,17 @@ async function selectLLMConfig(): Promise<LLMConfig | undefined> {
       process.stdout.write(" ⚠️  ANTHROPIC_API_KEY not set, using rule-based AI\n");
       return undefined;
     }
-    return { provider, apiKey, baseUrl: process.env.ANTHROPIC_BASE_URL };
+    const modelName = process.env.ANTHROPIC_MODEL || undefined;
+    return { provider, apiKey, baseUrl: process.env.ANTHROPIC_BASE_URL, modelName };
   }
 
-  if (provider === "openai") {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      process.stdout.write(" ⚠️  OPENAI_API_KEY not set, using rule-based AI\n");
-      return undefined;
-    }
-    return { provider, apiKey };
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    process.stdout.write(" ⚠️  OPENAI_API_KEY not set, using rule-based AI\n");
+    return undefined;
   }
-
-  const baseUrl =
-    process.env.LOCAL_MODEL_URL || "http://localhost:8080/completion";
-  return { provider, apiKey: "", baseUrl };
+  const modelName = process.env.OPENAI_MODEL || undefined;
+  return { provider, apiKey, modelName };
 }
 
 export async function setupGame(config: GameConfig): Promise<Player[]> {

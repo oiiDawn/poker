@@ -10,7 +10,7 @@ A single-player terminal-based Texas Hold'em poker game where the player compete
 - Full-screen TUI with in-place screen refresh (no scrolling)
 - Arrow-key menu navigation with Enter to confirm
 - Rule-based AI with 4 personalities (aggressive, conservative, bluffer, calling_station)
-- Multi-provider LLM AI: Anthropic Claude, OpenAI GPT, or local models (Ollama)
+- Multi-provider LLM AI: Anthropic Claude or OpenAI GPT
 - Rolling event log showing last 6 game actions
 - Complete poker rules: blinds, betting rounds, side pots, showdown
 - **TypeScript with modular architecture**
@@ -52,7 +52,6 @@ poker/
 - API keys (optional, for LLM mode):
   - Anthropic API key for Claude
   - OpenAI API key for GPT
-  - Local model server (llama.cpp) for local models
 
 ### Installation
 ```bash
@@ -66,12 +65,11 @@ Create `.env` file:
 ANTHROPIC_API_KEY=your_api_key_here
 # ANTHROPIC_AUTH_TOKEN=alternative_auth
 # ANTHROPIC_BASE_URL=custom_endpoint
+ANTHROPIC_MODEL=claude-haiku-4-5-20251001
 
 # OpenAI Configuration
 OPENAI_API_KEY=your_openai_key_here
-
-# Local Model Configuration (llama.cpp server)
-LOCAL_MODEL_URL=http://localhost:8080/completion
+OPENAI_MODEL=gpt-4o-mini
 ```
 
 ### Running
@@ -116,7 +114,7 @@ npm run type-check
 All types defined in `src/types.ts`:
 - `Card`, `Player`, `HandEvaluation` - Core data structures
 - `AIMode`, `AIPersonality`, `GameStage`, `Action`, `LLMProvider` - Enums
-- `LLMConfig` - LLM provider configuration (provider, apiKey, baseUrl)
+- `LLMConfig` - LLM provider configuration (provider, apiKey, baseUrl, modelName)
 - `GameConfig` - Configuration object (includes optional llmConfig)
 - `BettingState` - Tracks currentBet, lastRaiseSize, lastRaiserId, acted
 - `ShowdownResult` - handResults Map + outputLines for display
@@ -143,13 +141,12 @@ All types defined in `src/types.ts`:
 - Applies personality modifiers (aggression, bluff rate, fold bias)
 
 **LLM-Powered AI** (`llmDecideWithFallback` in `src/ai/llm.ts`):
-- Supports 3 providers: Anthropic Claude, OpenAI GPT, local models (llama.cpp)
+- Supports 2 providers: Anthropic Claude, OpenAI GPT
 - Builds structured prompt with game state
 - Routes to provider-specific API based on configuration
+- Model name is configurable via `ANTHROPIC_MODEL` and `OPENAI_MODEL` env vars
 - Parses response format: `ACTION: fold|check|call|raise N|allin`
 - Falls back to rule-based AI on errors
-- Local models use llama.cpp server (default port 8080, `/completion` endpoint)
-- Model is loaded at server startup, not specified per API request
 
 ### TUI System
 

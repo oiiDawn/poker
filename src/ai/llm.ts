@@ -136,7 +136,7 @@ async function callAnthropicAPI(config: LLMConfig, prompt: string): Promise<stri
   }
   const client = _clients.get(key) as Anthropic;
   const response = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
+    model: config.modelName || 'claude-haiku-4-5-20251001',
     max_tokens: 120,
     system: LLM_SYSTEM_PROMPT,
     messages: [{ role: 'user', content: prompt }]
@@ -151,7 +151,7 @@ async function callOpenAIAPI(config: LLMConfig, prompt: string): Promise<string>
   }
   const client = _clients.get(key) as OpenAI;
   const response = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: config.modelName || 'gpt-4o-mini',
     max_tokens: 120,
     messages: [
       { role: 'system', content: LLM_SYSTEM_PROMPT },
@@ -159,29 +159,6 @@ async function callOpenAIAPI(config: LLMConfig, prompt: string): Promise<string>
     ]
   });
   return response.choices[0]?.message?.content?.trim() || '';
-}
-
-async function callLocalAPI(config: LLMConfig, prompt: string): Promise<string> {
-  const url = config.baseUrl || 'http://localhost:8080/completion';
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      prompt: `${LLM_SYSTEM_PROMPT}\n\n${prompt}\n\nREASONING:`,
-      n_predict: 100,
-      temperature: 0.3,
-      top_p: 0.9,
-      top_k: 40,
-      repeat_penalty: 1.1,
-      stop: ['Stage:', 'Your hand:', 'Community:', 'Pot:', 'Make your decision', '\n\n\n'],
-      stream: false
-    })
-  });
-  if (!response.ok) throw new Error(`Local API error: ${response.statusText}`);
-  const data = await response.json() as { content?: string };
-  const content = data.content || '';
-  // Prepend "REASONING:" since we added it to the prompt
-  return content.startsWith('REASONING:') ? content : `REASONING:${content}`;
 }
 
 export async function llmDecideWithFallback(
@@ -202,10 +179,8 @@ export async function llmDecideWithFallback(
 
     if (!config || config.provider === 'anthropic') {
       responseText = await callAnthropicAPI(config || { provider: 'anthropic', apiKey: process.env.ANTHROPIC_API_KEY || '' }, prompt);
-    } else if (config.provider === 'openai') {
-      responseText = await callOpenAIAPI(config, prompt);
     } else {
-      responseText = await callLocalAPI(config, prompt);
+      responseText = await callOpenAIAPI(config, prompt);
     }
 
     const decision = parseLlmResponse(responseText, player, callAmount, addEvent);
