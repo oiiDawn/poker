@@ -36,6 +36,7 @@ export interface BettingRoundContext {
   initialChips: number;
   roundNumber: number;
   llmConfig?: import("../types").LLMConfig;
+  handActions: Map<string, Action[]>;
 }
 
 export function handleAction(
@@ -218,6 +219,7 @@ async function aiAction(
     );
   }
   const personality = player.personality as AIPersonality;
+  const myPreviousActions = ctx.handActions.get(player.id) || [];
   return aiDecide(
     player.hand,
     community,
@@ -227,6 +229,8 @@ async function aiAction(
     personality,
     stage,
     ctx.roundNumber,
+    myPreviousActions,
+    player.totalContributed,
   );
 }
 
@@ -295,6 +299,11 @@ export async function runBettingRound(
         callAmount,
         ctx.addEvent,
       );
+
+      // Record action for deviation calculation
+      const playerActions = ctx.handActions.get(player.id) || [];
+      playerActions.push(decision.action);
+      ctx.handActions.set(player.id, playerActions);
 
       const raiseIncrement =
         decision.action === "raise"

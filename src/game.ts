@@ -1,4 +1,4 @@
-import { Player, Card, GameStage, GameConfig } from "./types";
+import { Player, Card, GameStage, GameConfig, Action } from "./types";
 import { createDeck, shuffle } from "./core/deck";
 import { setupGame } from "./game/setup";
 import { runBettingRound, BettingRoundContext } from "./game/betting";
@@ -22,6 +22,7 @@ export class PokerGame {
   private roundNumber: number = 0;
   private showWinProb: boolean = false;
   private config: GameConfig;
+  private handActions: Map<string, Action[]> = new Map();
 
   constructor(config: GameConfig) {
     this.config = config;
@@ -66,6 +67,7 @@ export class PokerGame {
       initialChips: this.config.initialChips,
       roundNumber: this.roundNumber,
       llmConfig: this.config.llmConfig,
+      handActions: this.handActions,
     };
   }
 
@@ -127,6 +129,7 @@ export class PokerGame {
   async playRound(): Promise<Card[]> {
     this.roundNumber++;
     this.eventLog = [];
+    this.handActions = new Map(); // Reset hand actions for new round
     const deck = shuffle(createDeck());
     const community: Card[] = [];
 

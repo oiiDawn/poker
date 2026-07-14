@@ -78,7 +78,6 @@ export interface ShowdownResult {
 
 export interface PersonalityModifiers {
   aggressionBonus: number;
-  bluffRate: number;
   foldBias: number;
 }
 
