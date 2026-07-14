@@ -67,6 +67,9 @@ Make your decision.`;
 }
 
 function parseLlmResponse(text: string, player: Player, callAmount: number, addEvent: (msg: string) => void): AIDecision {
+  if (!text || text.trim().length === 0) {
+    throw new Error('LLM returned empty response');
+  }
   // Try to find ACTION line
   const actionMatch = text.match(/ACTION:\s*(\w+)(?:\s+(\d+))?/i);
   if (!actionMatch) {
@@ -154,12 +157,17 @@ async function callAnthropicAPI(config: LLMConfig, prompt: string): Promise<stri
   }
   const client = _clients.get(key) as Anthropic;
   const response = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
+    model: config.modelName || 'claude-haiku-4-5-20251001',
     max_tokens: 120,
     system: LLM_SYSTEM_PROMPT,
     messages: [{ role: 'user', content: prompt }]
   });
-  return response.content[0].type === 'text' ? response.content[0].text.trim() : '';
+  // Find the first text content block (skip thinking or other types)
+  const textBlock = response.content.find(b => b.type === 'text');
+  if (!textBlock || textBlock.type !== 'text') {
+    throw new Error(`No text in response. Content types: ${response.content.map(b => b.type).join(', ')}`);
+  }
+  return textBlock.text.trim();
 }
 
 async function callOpenAIAPI(config: LLMConfig, prompt: string): Promise<string> {
