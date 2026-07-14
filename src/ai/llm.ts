@@ -115,7 +115,21 @@ function parseLlmResponse(text: string, player: Player, callAmount: number, addE
         return { action: 'raise', amount: Math.min(effectiveAmount, player.chips) };
       }
     }
-    throw new Error(`Cannot parse: ${text.substring(0, 200)}`);
+    // No explicit keyword found — try natural language intent patterns
+    if (/i('ll|\s+will|\s+should|\s+want\s+to|\s+gonna)\s+fold/i.test(text)) return { action: 'fold' };
+    if (/i('ll|\s+will|\s+should|\s+want\s+to|\s+gonna)\s+(check|pass)/i.test(text)) {
+      return callAmount > 0 ? { action: 'call' } : { action: 'check' };
+    }
+    if (/i('ll|\s+will|\s+should|\s+want\s+to|\s+gonna)\s+call/i.test(text)) return { action: 'call' };
+    if (/i('ll|\s+will|\s+should|\s+want\s+to|\s+gonna)\s+raise/i.test(text)) {
+      const raiseAmount = Math.max(callAmount * 3, 60);
+      return { action: 'raise', amount: Math.min(raiseAmount, player.chips) };
+    }
+    // Final fallback: infer from hand strength language
+    if (/weak|fold|dump|trash|junk|terrible/i.test(text) && callAmount > 0) return { action: 'fold' };
+    if (/weak|fold|dump|trash|junk|terrible/i.test(text) && callAmount === 0) return { action: 'check' };
+    // Default to conservative play
+    return callAmount > 0 ? { action: 'call' } : { action: 'check' };
   }
 
   const verb = actionMatch[1].toLowerCase();
