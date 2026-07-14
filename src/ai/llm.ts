@@ -162,12 +162,12 @@ async function callAnthropicAPI(config: LLMConfig, prompt: string): Promise<stri
     system: LLM_SYSTEM_PROMPT,
     messages: [{ role: 'user', content: prompt }]
   });
-  // Find the first text content block (skip thinking or other types)
-  const textBlock = response.content.find(b => b.type === 'text');
-  if (!textBlock || textBlock.type !== 'text') {
-    throw new Error(`No text in response. Content types: ${response.content.map(b => b.type).join(', ')}`);
-  }
-  return textBlock.text.trim();
+  // Find text content — prefer 'text' block, fall back to 'thinking' block (some proxies use this)
+  const textBlock = response.content.find(b => b.type === 'text') as { type: 'text'; text: string } | undefined;
+  if (textBlock) return textBlock.text.trim();
+  const thinkingBlock = response.content.find(b => b.type === 'thinking') as { type: 'thinking'; thinking: string } | undefined;
+  if (thinkingBlock) return thinkingBlock.thinking.trim();
+  throw new Error(`No text in response. Content types: ${response.content.map(b => b.type).join(', ')}`);
 }
 
 async function callOpenAIAPI(config: LLMConfig, prompt: string): Promise<string> {
