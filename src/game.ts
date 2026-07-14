@@ -6,6 +6,9 @@ import { runShowdown, awardPotToWinner } from "./game/showdown";
 import { clearScreen, arrowMenu, colors } from "./ui/tui";
 import { printTable, cardsStr, padToWidth } from "./ui/renderer";
 
+const SMALL_BLIND = 10;
+const BIG_BLIND = 20;
+
 const STREETS: { stage: GameStage; deal: number }[] = [
   { stage: "flop", deal: 3 },
   { stage: "turn", deal: 1 },
@@ -50,7 +53,7 @@ export class PokerGame {
       players: this.players,
       stage,
       community,
-      bigBlind: this.config.bigBlind,
+      bigBlind: BIG_BLIND,
       getPot: () => this.getPot(),
       addEvent: (msg) => this.addEvent(msg),
       clearScreen,
@@ -136,8 +139,6 @@ export class PokerGame {
     }
 
     const isHeadsUp = this.players.filter((p) => p.chips > 0).length === 2;
-    const smallBlind = this.config.smallBlind;
-    const bigBlind = this.config.bigBlind;
 
     let sbIndex: number;
     let bbIndex: number;
@@ -156,13 +157,13 @@ export class PokerGame {
     const sbPlayer = this.players[sbIndex];
     const bbPlayer = this.players[bbIndex];
 
-    const sbAmount = Math.min(smallBlind, sbPlayer.chips);
+    const sbAmount = Math.min(SMALL_BLIND, sbPlayer.chips);
     sbPlayer.chips -= sbAmount;
     sbPlayer.bet = sbAmount;
     sbPlayer.totalContributed = sbAmount;
     if (sbPlayer.chips === 0) sbPlayer.allIn = true;
 
-    const bbAmount = Math.min(bigBlind, bbPlayer.chips);
+    const bbAmount = Math.min(BIG_BLIND, bbPlayer.chips);
     bbPlayer.chips -= bbAmount;
     bbPlayer.bet = bbAmount;
     bbPlayer.totalContributed = bbAmount;
@@ -186,8 +187,8 @@ export class PokerGame {
     const preflopCtx = this.buildBettingContext("preflop", community);
     let result = await runBettingRound(
       preflopFirst,
-      bigBlind,
-      bigBlind,
+      BIG_BLIND,
+      BIG_BLIND,
       bbPlayer.id,
       preflopCtx,
     );

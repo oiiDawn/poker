@@ -88,8 +88,6 @@ describe("PokerGame round result rendering", () => {
     const game = new PokerGame({
       aiMode: "rule",
       numOpponents: 1,
-      smallBlind: 10,
-      bigBlind: 20,
       initialChips: 1000,
     });
 

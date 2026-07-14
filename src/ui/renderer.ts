@@ -2,22 +2,14 @@ import { Player, Card, GameStage } from '../types';
 import { colors } from './tui';
 import { calculateWinProbability } from '../core/probability';
 
-const stringWidth = require('string-width');
-
-export function visibleLength(str: string): number {
-  return stringWidth(str);
+// ponytail: replaced string-width dep with ANSI strip regex — no CJK in this game
+function visibleLength(str: string): number {
+  return str.replace(/\x1b\[[0-9;]*m/g, '').length;
 }
 
 export function padToWidth(str: string, width: number): string {
   const visible = visibleLength(str);
-  const padding = Math.max(0, width - visible);
-  return str + ' '.repeat(padding);
-}
-
-export function padLeftToWidth(str: string, width: number): string {
-  const visible = visibleLength(str);
-  const padding = Math.max(0, width - visible);
-  return ' '.repeat(padding) + str;
+  return str + ' '.repeat(Math.max(0, width - visible));
 }
 
 export function colorCard(card: Card): string {
@@ -26,16 +18,8 @@ export function colorCard(card: Card): string {
   return `${color}${colors.bright}${card.rank}${card.suit}${colors.reset}`;
 }
 
-export function colorCards(cards: Card[]): string {
-  return cards.map(colorCard).join('  ');
-}
-
-export function cardStr(card: Card): string {
-  return `${card.rank}${card.suit}`;
-}
-
 export function cardsStr(cards: Card[]): string {
-  return cards.map(cardStr).join(' ');
+  return cards.map(c => `${c.rank}${c.suit}`).join(' ');
 }
 
 export function renderWinProbIndicator(winProb: number): string {
@@ -102,7 +86,8 @@ export function printTable(
       : p.chips > initialChips * 0.5 ? colors.yellow
       : colors.red;
     const chips = `${chipsColor}${p.chips}${colors.reset}`;
-    const chipsCol = padLeftToWidth(chips, 10);
+    const chipsVisible = visibleLength(chips);
+    const chipsCol = ' '.repeat(Math.max(0, 10 - chipsVisible)) + chips;
 
     let status = '';
     if (p.folded) {
@@ -114,7 +99,7 @@ export function printTable(
 
     let hand = '';
     if (p.id === 'player' && !p.folded && p.hand.length) {
-      hand = `${colors.bright}Hand:${colors.reset} ${colorCards(p.hand)}`;
+      hand = `${colors.bright}Hand:${colors.reset} ${p.hand.map(colorCard).join('  ')}`;
 
       if (showWinProb) {
         const activeOpponents = players.filter(pp => pp.id !== 'player' && !pp.folded).length;

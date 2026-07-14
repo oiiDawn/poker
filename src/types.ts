@@ -92,8 +92,6 @@ export interface LLMConfig {
 export interface GameConfig {
   aiMode: AIMode;
   numOpponents: number;
-  smallBlind: number;
-  bigBlind: number;
   initialChips: number;
   llmConfig?: LLMConfig;
 }

@@ -1,13 +1,8 @@
 import { Player, Card, HandEvaluation, ShowdownResult } from "../types";
 import { evaluateHand, compareHands } from "../core/evaluator";
-import { buildPots } from "../core/pot";
+import { buildPots, Pot } from "../core/pot";
 import { cardsStr } from "../ui/renderer";
 import { colors } from "../ui/tui";
-
-interface Pot {
-  amount: number;
-  eligible: Player[];
-}
 
 export function runShowdown(
   players: Player[],

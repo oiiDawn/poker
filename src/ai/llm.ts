@@ -7,7 +7,9 @@ import { cardsStr } from '../ui/renderer';
 const API_TIMEOUT = 10000;
 const API_MAX_RETRIES = 2;
 
-const _clients = new Map<string, Anthropic | OpenAI>();
+// ponytail: single-client cache — one game runs at a time
+let _anthropicClient: Anthropic | null = null;
+let _openaiClient: OpenAI | null = null;
 
 const LLM_SYSTEM_PROMPT = `You are a professional Texas Hold'em poker player named Eve. You make rational decisions based on pot odds, hand strength, and opponent stacks, occasionally bluffing.
 
@@ -165,12 +167,10 @@ function parseLlmResponse(text: string, player: Player, callAmount: number, addE
 }
 
 async function callAnthropicAPI(config: LLMConfig, prompt: string): Promise<string> {
-  const key = `anthropic:${config.apiKey}:${config.baseUrl || ''}`;
-  if (!_clients.has(key)) {
-    _clients.set(key, new Anthropic({ apiKey: config.apiKey, baseURL: config.baseUrl, timeout: API_TIMEOUT, maxRetries: API_MAX_RETRIES }));
+  if (!_anthropicClient) {
+    _anthropicClient = new Anthropic({ apiKey: config.apiKey, baseURL: config.baseUrl, timeout: API_TIMEOUT, maxRetries: API_MAX_RETRIES });
   }
-  const client = _clients.get(key) as Anthropic;
-  const response = await client.messages.create({
+  const response = await _anthropicClient.messages.create({
     model: config.modelName || 'claude-haiku-4-5-20251001',
     max_tokens: 120,
     system: LLM_SYSTEM_PROMPT,
@@ -185,12 +185,10 @@ async function callAnthropicAPI(config: LLMConfig, prompt: string): Promise<stri
 }
 
 async function callOpenAIAPI(config: LLMConfig, prompt: string): Promise<string> {
-  const key = `openai:${config.apiKey}:${config.baseUrl || ''}`;
-  if (!_clients.has(key)) {
-    _clients.set(key, new OpenAI({ apiKey: config.apiKey, baseURL: config.baseUrl, timeout: API_TIMEOUT, maxRetries: API_MAX_RETRIES }));
+  if (!_openaiClient) {
+    _openaiClient = new OpenAI({ apiKey: config.apiKey, baseURL: config.baseUrl, timeout: API_TIMEOUT, maxRetries: API_MAX_RETRIES });
   }
-  const client = _clients.get(key) as OpenAI;
-  const response = await client.chat.completions.create({
+  const response = await _openaiClient.chat.completions.create({
     model: config.modelName || 'gpt-4o-mini',
     max_tokens: 120,
     messages: [

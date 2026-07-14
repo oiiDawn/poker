@@ -1,4 +1,4 @@
-import { buildPots, distributePots } from '../core/pot';
+import { buildPots } from '../core/pot';
 import { Player } from '../types';
 
 describe('Pot Calculation', () => {
@@ -72,49 +72,6 @@ describe('Pot Calculation', () => {
 
       expect(pots[0].eligible).toHaveLength(2);
       expect(pots[0].eligible.find(p => p.name === 'Alice')).toBeUndefined();
-    });
-  });
-
-  describe('distributePots', () => {
-    it('should distribute single pot to eligible players', () => {
-      const players = [
-        makePlayer('Alice', 900, 100),
-        makePlayer('Bob', 900, 100)
-      ];
-
-      const pots = [{ amount: 200, eligible: players }];
-      distributePots(players, pots);
-
-      expect(players[0].chips).toBe(1000);
-      expect(players[1].chips).toBe(1000);
-    });
-
-    it('should handle odd amounts with remainder', () => {
-      const players = [
-        makePlayer('Alice', 900, 100),
-        makePlayer('Bob', 900, 100),
-        makePlayer('Charlie', 900, 100)
-      ];
-
-      const pots = [{ amount: 301, eligible: players }];
-      distributePots(players, pots);
-
-      expect(players[0].chips).toBe(1000); // Gets remainder
-      expect(players[1].chips).toBe(1000);
-      expect(players[2].chips).toBe(1000);
-    });
-
-    it('should not distribute to folded players', () => {
-      const players = [
-        makePlayer('Alice', 900, 100, true),
-        makePlayer('Bob', 900, 100)
-      ];
-
-      const pots = [{ amount: 200, eligible: players }];
-      distributePots(players, pots);
-
-      expect(players[0].chips).toBe(900); // Folded, no chips
-      expect(players[1].chips).toBe(1100); // Gets all
     });
   });
 });

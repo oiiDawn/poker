@@ -53,7 +53,7 @@ export function calculateWinProbability(holeCards: Card[], community: Card[], nu
   return Math.max(0.05, Math.min(0.99, baseWinRate * finalOpponentFactor * uncertaintyFactor));
 }
 
-function estimateHandStrength(holeCards: Card[], community: Card[]): number {
+export function estimateHandStrength(holeCards: Card[], community: Card[]): number {
   if (community.length === 0) {
     const v1 = holeCards[0].value, v2 = holeCards[1].value;
     const paired = v1 === v2;

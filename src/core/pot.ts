@@ -1,6 +1,6 @@
 import { Player } from '../types';
 
-interface Pot {
+export interface Pot {
   amount: number;
   eligible: Player[];
 }
@@ -21,14 +21,4 @@ export function buildPots(players: Player[]): Pot[] {
     prev = t;
   }
   return pots;
-}
-
-export function distributePots(players: Player[], pots: Pot[]): void {
-  for (const pot of pots) {
-    const eligible = pot.eligible.filter(p => !p.folded);
-    if (eligible.length === 0) continue;
-
-    const share = Math.floor(pot.amount / eligible.length);
-    eligible.forEach(p => p.chips += share);
-  }
 }
