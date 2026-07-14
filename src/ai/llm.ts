@@ -94,6 +94,24 @@ function parseLlmResponse(text: string, player: Player, callAmount: number, addE
       const effectiveAmount = Math.max(amount, minRaise);
       return { action: 'raise', amount: Math.min(effectiveAmount, player.chips) };
     }
+    if (!lowerText.includes('raise') && !lowerText.includes('call') &&
+        !lowerText.includes('check') && !lowerText.includes('fold') &&
+        !lowerText.includes('allin') && !lowerText.includes('all-in')) {
+      // No English keywords found — try Chinese
+      if (lowerText.includes('弃牌')) return { action: 'fold' };
+      if (lowerText.includes('全下') || lowerText.includes('全押')) {
+        return { action: 'raise', amount: player.chips };
+      }
+      if ((lowerText.includes('过牌') || lowerText.includes('看牌')) && callAmount === 0) return { action: 'check' };
+      if (lowerText.includes('跟注') || lowerText.includes('跟')) return { action: 'call' };
+      const cnRaiseMatch = text.match(/加注\s*(\d+)/);
+      if (cnRaiseMatch) {
+        const amount = parseInt(cnRaiseMatch[1]);
+        const minRaise = Math.max(callAmount, 20);
+        const effectiveAmount = Math.max(amount, minRaise);
+        return { action: 'raise', amount: Math.min(effectiveAmount, player.chips) };
+      }
+    }
     throw new Error(`Cannot parse: ${text.substring(0, 200)}`);
   }
 
@@ -218,7 +236,12 @@ export async function llmDecideWithFallback(
       else if (err.status === 429) addEvent(` ⚠️  Rate limit exceeded`);
       else addEvent(` ⚠️  API error: ${err.message}`);
     } else {
-      addEvent(` ⚠️  Network error: ${err instanceof Error ? err.message : String(err)}`);
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.startsWith('Cannot parse:') || msg.startsWith('Unknown action:')) {
+        addEvent(` ⚠️  LLM response error: ${msg}`);
+      } else {
+        addEvent(` ⚠️  Network error: ${msg}`);
+      }
     }
     return aiDecide(player.hand, community, pot, callAmount, player.chips, 'conservative', 'preflop', roundNumber);
   }
